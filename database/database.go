@@ -43,7 +43,7 @@ func ConnectDB() {
 	log.Println("Database connected successfully!")
 
 	// Auto migrate the schema
-	err = DB.AutoMigrate(&models.User{}, &models.Employee{}, &models.Customer{}, &models.Role{})
+	err = DB.AutoMigrate(&models.User{}, &models.Role{}, &models.Employee{}, &models.Customer{}, &models.TroubleTicket{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -61,14 +61,10 @@ func seedInitialData() {
 
 	if roleCount == 0 {
 		roles := []models.Role{
-			{
-				Name:        "admin",
-				Description: "Administrator role",
-			},
-			{
-				Name:        "employee",
-				Description: "Employee role",
-			},
+			{Name: "owner", Description: "Owner"},
+			{Name: "customer_service", Description: "Customer Service"},
+			{Name: "noc", Description: "Network Operations Center"},
+			{Name: "technician", Description: "Field Technician"},
 		}
 
 		for _, role := range roles {
@@ -106,20 +102,12 @@ func seedInitialData() {
 	if employeeCount == 0 {
 		// Hash password: "password123"
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-		
+
 		employees := []models.Employee{
-			{
-				Name:     "Admin User",
-				Email:    "admin@example.com",
-				Password: string(hashedPassword),
-				RoleID:   1, // admin role
-			},
-			{
-				Name:     "Employee User",
-				Email:    "employee@example.com",
-				Password: string(hashedPassword),
-				RoleID:   2, // employee role
-			},
+			{Name: "Owner User", Email: "admin@example.com", Password: string(hashedPassword), RoleID: 1},
+			{Name: "Customer Service", Email: "cs@example.com", Password: string(hashedPassword), RoleID: 2},
+			{Name: "NOC Operator", Email: "noc@example.com", Password: string(hashedPassword), RoleID: 3},
+			{Name: "Technician User", Email: "tech@example.com", Password: string(hashedPassword), RoleID: 4},
 		}
 
 		for _, employee := range employees {
@@ -135,7 +123,7 @@ func seedInitialData() {
 	if customerCount == 0 {
 		// Hash password: "password123"
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-		
+
 		customers := []models.Customer{
 			{
 				Name:     "Customer One",

@@ -6,6 +6,7 @@ import (
 
 	"sistem-internal/database"
 	"sistem-internal/handlers"
+	"sistem-internal/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -67,6 +68,30 @@ func main() {
 		{
 			auth.POST("/employee/login", handlers.EmployeeLogin)
 			auth.POST("/customer/login", handlers.CustomerLogin)
+		}
+
+		// Tickets workflow routes (RBAC)
+		tickets := api.Group("/tickets")
+		{
+			// Owner can view all tickets
+			tickets.GET("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.ListTickets)
+
+			// Customer Service creates ticket and forwards to NOC
+			tickets.POST("", middleware.AuthRequired(), middleware.RoleRequired("customer_service"), handlers.CreateTicket)
+			tickets.POST(":id/forward/noc", middleware.AuthRequired(), middleware.RoleRequired("customer_service"), handlers.ForwardToNOC)
+
+			// NOC diagnoses
+			tickets.POST(":id/noc/diagnose", middleware.AuthRequired(), middleware.RoleRequired("noc"), handlers.NOCDiagnose)
+
+			// Technician resolves
+			tickets.POST(":id/technician/resolve", middleware.AuthRequired(), middleware.RoleRequired("technician"), handlers.TechnicianResolve)
+		}
+
+		// Owner employee management
+		employees := api.Group("/employees")
+		{
+			employees.GET("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.ListEmployees)
+			employees.POST("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.CreateEmployee)
 		}
 	}
 
