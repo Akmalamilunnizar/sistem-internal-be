@@ -61,6 +61,13 @@ func main() {
 		api.PUT("/users/:id", handlers.UpdateUser)
 		api.DELETE("/users/:id", handlers.DeleteUser)
 		api.GET("/users/count", handlers.GetUserCount)
+
+		// Auth routes
+		auth := api.Group("/auth")
+		{
+			auth.POST("/employee/login", handlers.EmployeeLogin)
+			auth.POST("/customer/login", handlers.CustomerLogin)
+		}
 	}
 
 	// Start server

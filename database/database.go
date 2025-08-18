@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -42,7 +43,7 @@ func ConnectDB() {
 	log.Println("Database connected successfully!")
 
 	// Auto migrate the schema
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(&models.User{}, &models.Employee{}, &models.Customer{}, &models.Role{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
@@ -54,10 +55,33 @@ func ConnectDB() {
 }
 
 func seedInitialData() {
-	var count int64
-	DB.Model(&models.User{}).Count(&count)
+	// Seed roles
+	var roleCount int64
+	DB.Model(&models.Role{}).Count(&roleCount)
 
-	if count == 0 {
+	if roleCount == 0 {
+		roles := []models.Role{
+			{
+				Name:        "admin",
+				Description: "Administrator role",
+			},
+			{
+				Name:        "employee",
+				Description: "Employee role",
+			},
+		}
+
+		for _, role := range roles {
+			DB.Create(&role)
+		}
+		log.Println("Roles seeded successfully!")
+	}
+
+	// Seed users
+	var userCount int64
+	DB.Model(&models.User{}).Count(&userCount)
+
+	if userCount == 0 {
 		users := []models.User{
 			{
 				Name:  "John Doe",
@@ -72,7 +96,66 @@ func seedInitialData() {
 		for _, user := range users {
 			DB.Create(&user)
 		}
+		log.Println("Users seeded successfully!")
+	}
 
-		log.Println("Initial data seeded successfully!")
+	// Seed employees
+	var employeeCount int64
+	DB.Model(&models.Employee{}).Count(&employeeCount)
+
+	if employeeCount == 0 {
+		// Hash password: "password123"
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+		
+		employees := []models.Employee{
+			{
+				Name:     "Admin User",
+				Email:    "admin@example.com",
+				Password: string(hashedPassword),
+				RoleID:   1, // admin role
+			},
+			{
+				Name:     "Employee User",
+				Email:    "employee@example.com",
+				Password: string(hashedPassword),
+				RoleID:   2, // employee role
+			},
+		}
+
+		for _, employee := range employees {
+			DB.Create(&employee)
+		}
+		log.Println("Employees seeded successfully!")
+	}
+
+	// Seed customers
+	var customerCount int64
+	DB.Model(&models.Customer{}).Count(&customerCount)
+
+	if customerCount == 0 {
+		// Hash password: "password123"
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+		
+		customers := []models.Customer{
+			{
+				Name:     "Customer One",
+				Phone:    "081234567890",
+				Email:    "customer1@example.com",
+				Password: string(hashedPassword),
+				Status:   "active",
+			},
+			{
+				Name:     "Customer Two",
+				Phone:    "081234567891",
+				Email:    "customer2@example.com",
+				Password: string(hashedPassword),
+				Status:   "active",
+			},
+		}
+
+		for _, customer := range customers {
+			DB.Create(&customer)
+		}
+		log.Println("Customers seeded successfully!")
 	}
 }
