@@ -87,7 +87,40 @@ func main() {
 			tickets.POST(":id/technician/resolve", middleware.AuthRequired(), middleware.RoleRequired("technician"), handlers.TechnicianResolve)
 		}
 
-		// Owner employee management
+		// Customer management routes
+		customers := api.Group("/customers")
+		{
+			customers.GET("", middleware.AuthRequired(), handlers.GetCustomers)
+			customers.GET("/:id", middleware.AuthRequired(), handlers.GetCustomer)
+			customers.POST("", middleware.AuthRequired(), middleware.RoleRequired("customer_service"), handlers.CreateCustomer)
+			customers.PUT("/:id", middleware.AuthRequired(), middleware.RoleRequired("customer_service"), handlers.UpdateCustomer)
+			customers.DELETE("/:id", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.DeleteCustomer)
+			customers.GET("/:id/tickets", middleware.AuthRequired(), handlers.GetCustomerTickets)
+		}
+
+		// Reports and analytics routes
+		reports := api.Group("/reports")
+		{
+			reports.GET("/tickets", middleware.AuthRequired(), handlers.GetAllTickets)
+			reports.GET("/trouble-types", middleware.AuthRequired(), handlers.GetTroubleTypeStats)
+			reports.GET("/geographic", middleware.AuthRequired(), handlers.GetGeographicTroubleData)
+			reports.GET("/summary", middleware.AuthRequired(), handlers.GetTroubleSummary)
+		}
+
+		// Enhanced user management routes (Owner only)
+		staff := api.Group("/staff")
+		{
+			staff.GET("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.GetAllStaff)
+			staff.GET("/:id", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.GetStaffById)
+			staff.POST("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.CreateEmployee)
+			staff.PUT("/:id", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.UpdateStaff)
+			staff.DELETE("/:id", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.DeleteStaff)
+		}
+
+		// Roles management
+		api.GET("/roles", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.GetRoles)
+
+		// Owner employee management (keeping for backward compatibility)
 		employees := api.Group("/employees")
 		{
 			employees.GET("", middleware.AuthRequired(), middleware.RoleRequired("owner"), handlers.ListEmployees)
